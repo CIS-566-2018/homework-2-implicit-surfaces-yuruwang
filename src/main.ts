@@ -1,4 +1,4 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec2, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -46,7 +46,7 @@ function main() {
   screenQuad = new Square(vec3.fromValues(0, 0, 0));
   screenQuad.create();
 
-  const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, -20, 30), vec3.fromValues(0, 0, 0));
 
   gl.clearColor(0.0, 0.0, 0.0, 1);
   gl.disable(gl.DEPTH_TEST);
@@ -56,8 +56,10 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/raymarch-frag.glsl')),
   ]);
 
+  var time = 0.0;
   // This function will be called every frame
   function tick() {
+    
     camera.update();
     stats.begin();
 
@@ -65,7 +67,18 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // TODO: get / calculate relevant uniforms to send to shader here
+    time++;
+    if (time > 1000000.0) {
+      time = 0.0;
+    } 
+
     // TODO: send uniforms to shader
+    raymarchShader.setDimension(vec2.fromValues(canvas.width, canvas.height));
+    raymarchShader.setTime(time);
+    raymarchShader.setFov(camera.fovy);
+    raymarchShader.setEyePos(camera.controls.eye);
+    raymarchShader.setViewInv(camera.viewMatrix);
+    //console.log("camera.controls.eye = " + camera.controls.eye);
 
     // March!
     raymarchShader.draw(screenQuad);
